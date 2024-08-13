@@ -48,7 +48,7 @@ def run_infinite_post_data_loop():
             
             for row in pin_selected_row:
                 pin_result = dict(row._mapping)
-                pin_payload = json.dumps(pin_result)
+                pin_payload = json.dumps({"records": [{"value": pin_result}]}, default=str)
                 pin_response = requests.request("POST", invoke_url, headers=headers, data=pin_result)
 
             # geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
