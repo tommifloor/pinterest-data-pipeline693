@@ -12,7 +12,7 @@ random.seed(100)
 
 creds_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/db_creds.yaml'
 urls_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/aws_urls.yaml'
-headers = {'Content-Type':'application/vnd.kafka.json.v2+json'}
+headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
 class AWSDBConnector:
 
@@ -58,6 +58,7 @@ def run_infinite_post_data_loop():
                 pin_result = dict(row._mapping)
                 pin_payload = json.dumps({"records": [{"value": pin_result}]}, default=str)
                 pin_response = requests.request("POST", pin_invoke_url, headers=headers, data=pin_payload)
+
 
             geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
             geo_selected_row = connection.execute(geo_string)
