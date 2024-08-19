@@ -12,7 +12,7 @@ random.seed(100)
 
 creds_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/db_creds.yaml'
 urls_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/aws_urls.yaml'
-headers = {'Content-Type':'application/vnd.kafka.json.v2+json'}
+headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
 class AWSDBConnector:
 
@@ -36,7 +36,7 @@ new_connector = AWSDBConnector()
 
 
 def run_infinite_post_data_loop():
-
+        
     with open(urls_path, 'r') as url_strings:
         api_urls = yaml.safe_load(url_strings)
 
