@@ -1,6 +1,7 @@
 # Pinterest Data Pipeline
 
-![Static Badge](https://img.shields.io/badge/made_for-AiCore-red) ![GitHub License](https://img.shields.io/github/license/https%3A%2F%2Fgithub.com%2Flicense%2Ftommifloor/%2Fpinterest-data-pipeline693)
+![Static Badge](https://img.shields.io/badge/made_for-AiCore-red) ![GitHub License](https://img.shields.io/github/license/tommifloor/pinterest-data-pipeline693)
+
 
 # Table of Contents
 
