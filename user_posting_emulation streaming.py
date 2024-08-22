@@ -11,8 +11,12 @@ import yaml
 random.seed(100)
 
 creds_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/db_creds.yaml'
-urls_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/aws_urls.yaml'
-headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
+
+pin_invoke_url = "https://aj3ii03bub.execute-api.us-east-1.amazonaws.com/test/streams/streaming-0affea73130b-pin/record"
+geo_invoke_url = "https://aj3ii03bub.execute-api.us-east-1.amazonaws.com/test/streams/streaming-0affea73130b-geo/record"
+user_invoke_url = "https://aj3ii03bub.execute-api.us-east-1.amazonaws.com/test/streams/streaming-0affea73130b-user/record"
+
+headers = {'Content-Type': 'application/json'}
 
 class AWSDBConnector:
 
@@ -36,14 +40,6 @@ new_connector = AWSDBConnector()
 
 
 def run_infinite_post_data_loop():
-
-    with open(urls_path, 'r') as url_strings:
-        api_urls = yaml.safe_load(url_strings)
-
-        pin_invoke_url = api_urls['pin_invoke_url']
-        geo_invoke_url = api_urls['geo_invoke_url']
-        user_invoke_url = api_urls['user_invoke_url']
-
     while True:
         sleep(random.randrange(0, 2))
         random_row = random.randint(0, 11000)
@@ -56,31 +52,42 @@ def run_infinite_post_data_loop():
 
             for row in pin_selected_row:
                 pin_result = dict(row._mapping)
-                pin_payload = json.dumps({"records": [{"value": pin_result}]}, default=str)
-                pin_response = requests.request("POST", pin_invoke_url, headers=headers, data=pin_payload)
-
+                pin_payload = json.dumps({
+                    "StreamName": "YourStreamName",
+                    "Data": pin_result,
+                        "PartitionKey": "partition-1"
+                        }, default=str)
+                pin_response = requests.request("PUT", pin_invoke_url, headers=headers, data=pin_payload)
 
             geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
             geo_selected_row = connection.execute(geo_string)
 
             for row in geo_selected_row:
                 geo_result = dict(row._mapping)
-                geo_payload = json.dumps({"records": [{"value": geo_result}]}, default=str)
-                geo_response = requests.request("POST", geo_invoke_url, headers=headers, data=geo_payload)
+                geo_payload = json.dumps({
+                    "StreamName": "YourStreamName",
+                    "Data": geo_result,
+                        "PartitionKey": "partition-1"
+                        }, default=str)
+                geo_response = requests.request("PUT", geo_invoke_url, headers=headers, data=geo_payload)
 
             user_string = text(f"SELECT * FROM user_data LIMIT {random_row}, 1")
             user_selected_row = connection.execute(user_string)
             
             for row in user_selected_row:
                 user_result = dict(row._mapping)
-                user_payload = json.dumps({"records": [{"value": user_result}]}, default=str)
-                user_response = requests.request("POST", user_invoke_url, headers=headers, data=user_payload)
+                user_payload = json.dumps({
+                    "StreamName": "YourStreamName",
+                    "Data": user_result,
+                        "PartitionKey": "partition-1"
+                        }, default=str)
+                user_response = requests.request("PUT", user_invoke_url, headers=headers, data=user_payload)
             
+
             print(pin_response.status_code)
             print(geo_response.status_code)
             print(user_response.status_code)
-
+            print('Working')
 
 if __name__ == "__main__":
     run_infinite_post_data_loop()
-    print('Working')

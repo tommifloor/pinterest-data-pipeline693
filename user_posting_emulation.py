@@ -28,7 +28,7 @@ class AWSDBConnector:
         self.PORT = db_creds['PORT']
         
     def create_db_connector(self):
-        engine = sqlalchemy.create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4")
+        engine = sqlalchemy.create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4",echo=True)
         return engine
 
 
@@ -36,14 +36,6 @@ new_connector = AWSDBConnector()
 
 
 def run_infinite_post_data_loop():
-        
-    with open(urls_path, 'r') as url_strings:
-        api_urls = yaml.safe_load(url_strings)
-
-        pin_invoke_url = api_urls['pin_invoke_url']
-        geo_invoke_url = api_urls['geo_invoke_url']
-        user_invoke_url = api_urls['user_invoke_url']
-
     while True:
         sleep(random.randrange(0, 2))
         random_row = random.randint(0, 11000)
@@ -58,6 +50,7 @@ def run_infinite_post_data_loop():
                 pin_result = dict(row._mapping)
                 pin_payload = json.dumps({"records": [{"value": pin_result}]}, default=str)
                 pin_response = requests.request("POST", pin_invoke_url, headers=headers, data=pin_payload)
+
 
             geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
             geo_selected_row = connection.execute(geo_string)
@@ -78,8 +71,15 @@ def run_infinite_post_data_loop():
             print(pin_response.status_code)
             print(geo_response.status_code)
             print(user_response.status_code)
+            print('Working')
 
 
 if __name__ == "__main__":
+    with open(urls_path, 'r') as url_strings:
+        api_urls = yaml.safe_load(url_strings)
+
+        pin_invoke_url = api_urls['pin_invoke_url']
+        geo_invoke_url = api_urls['geo_invoke_url']
+        user_invoke_url = api_urls['user_invoke_url']
+        
     run_infinite_post_data_loop()
-    print('Working')
