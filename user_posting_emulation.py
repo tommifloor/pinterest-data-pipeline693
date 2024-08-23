@@ -10,9 +10,7 @@ import yaml
 
 random.seed(100)
 
-creds_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/db_creds.yaml'
-urls_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/aws_urls.yaml'
-headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
+creds_path = 'credentials/db_creds.yaml'
 
 class AWSDBConnector:
 
@@ -28,12 +26,14 @@ class AWSDBConnector:
         self.PORT = db_creds['PORT']
         
     def create_db_connector(self):
-        engine = sqlalchemy.create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4",echo=True)
+        engine = sqlalchemy.create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4")
         return engine
 
 
 new_connector = AWSDBConnector()
 
+urls_path = 'credentials/aws_urls.yaml'
+headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
 def run_infinite_post_data_loop():
     while True:
@@ -43,43 +43,21 @@ def run_infinite_post_data_loop():
 
         with engine.connect() as connection:
 
-            pin_string = text(f"SELECT * FROM pinterest_data LIMIT {random_row}, 1")
-            pin_selected_row = connection.execute(pin_string)
+            for value in invoke_urls:
+                sql_string = text(f"SELECT * FROM {value} LIMIT {random_row}, 1")
+                selected_row = connection.execute(sql_string)
 
-            for row in pin_selected_row:
-                pin_result = dict(row._mapping)
-                pin_payload = json.dumps({"records": [{"value": pin_result}]}, default=str)
-                pin_response = requests.request("POST", pin_invoke_url, headers=headers, data=pin_payload)
+                for row in selected_row:
+                    sql_result = dict(row._mapping)
+                    api_payload = json.dumps({"records": [{"value": sql_result}]}, default=str)
+                    api_response = requests.request("POST", invoke_urls[value], headers=headers, data=api_payload)
 
-
-            geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
-            geo_selected_row = connection.execute(geo_string)
-
-            for row in geo_selected_row:
-                geo_result = dict(row._mapping)
-                geo_payload = json.dumps({"records": [{"value": geo_result}]}, default=str)
-                geo_response = requests.request("POST", geo_invoke_url, headers=headers, data=geo_payload)
-
-            user_string = text(f"SELECT * FROM user_data LIMIT {random_row}, 1")
-            user_selected_row = connection.execute(user_string)
-            
-            for row in user_selected_row:
-                user_result = dict(row._mapping)
-                user_payload = json.dumps({"records": [{"value": user_result}]}, default=str)
-                user_response = requests.request("POST", user_invoke_url, headers=headers, data=user_payload)
-            
-            print(pin_response.status_code)
-            print(geo_response.status_code)
-            print(user_response.status_code)
-            print('Working')
+                print(api_response.status_code)
+        print('Working')
 
 
 if __name__ == "__main__":
-    with open(urls_path, 'r') as url_strings:
-        api_urls = yaml.safe_load(url_strings)
-
-        pin_invoke_url = api_urls['pin_invoke_url']
-        geo_invoke_url = api_urls['geo_invoke_url']
-        user_invoke_url = api_urls['user_invoke_url']
-        
+    with open(urls_path, 'r') as api_urls:
+        invoke_urls = yaml.safe_load(api_urls)
+    
     run_infinite_post_data_loop()
