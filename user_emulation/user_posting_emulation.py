@@ -10,12 +10,14 @@ import yaml
 
 random.seed(100)
 
-creds_path = 'credentials/db_creds.yaml'
+creds_path = '../credentials/db_creds.yaml'
+urls_path = '../credentials/aws_urls.yaml'
+headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
 class AWSDBConnector:
 
     def __init__(self):
-
+        # load db credentials
         with open(creds_path, 'r') as creds:
             db_creds = yaml.safe_load(creds)
 
@@ -32,10 +34,12 @@ class AWSDBConnector:
 
 new_connector = AWSDBConnector()
 
-urls_path = 'credentials/aws_urls.yaml'
-headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
 def run_infinite_post_data_loop():
+    # retrieve api invoke urls
+    with open(urls_path, 'r') as api_urls:
+        invoke_urls = yaml.safe_load(api_urls)
+
     while True:
         sleep(random.randrange(0, 2))
         random_row = random.randint(0, 11000)
@@ -52,12 +56,15 @@ def run_infinite_post_data_loop():
                     api_payload = json.dumps({"records": [{"value": sql_result}]}, default=str)
                     api_response = requests.request("POST", invoke_urls[value], headers=headers, data=api_payload)
 
-                print(api_response.status_code)
+                if api_response.status_code != 200:
+                    print(f"Failed to send data. Status code: {api_response.status_code}")
+                else:
+                    print(f"Successfully sent data.Status code: {api_response.status_code}")
+                    print(api_payload)
+
         print('Working')
 
 
 if __name__ == "__main__":
-    with open(urls_path, 'r') as api_urls:
-        invoke_urls = yaml.safe_load(api_urls)
-    
     run_infinite_post_data_loop()
+    print("Loop end.")

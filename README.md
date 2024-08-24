@@ -1,11 +1,14 @@
 # Pinterest Data Pipeline
-
 ![Static Badge](https://img.shields.io/badge/made%20with-Python-blue)
 ![GitHub License](https://img.shields.io/github/license/tommifloor/pinterest-data-pipeline693)
 ![GitHub last commit](https://img.shields.io/github/last-commit/tommifloor/pinterest-data-pipeline693)
 ![Static Badge](https://img.shields.io/badge/made_for-AiCore-red) 
+---
+This project is a simulated data pipeline for Pinterest user data, built using AWS and Databricks services. The goal of the project is to demonstrate an understanding of data engineering principles, as part of the [AiCore trainig course for data engineering](https://www.theaicore.com/launch/data-engineering).
 
-# Table of Contents
+This document will attempt to breakdown and describe the components of the project, starting with the Pinterest user data generation, before moving on to the two main components of the pipeline: batch and streaming data processing. Finally, the document will provide details of the project services, tools, and environment for easy replication.
+
+## Table of Contents
 1. [Overview](#1.-project-overview)
 3. [Services & Tools](#3.-services-&-tools)
 6. [Batch Processing](#6.-batch-processing)
@@ -13,11 +16,31 @@
 7. [Folder Structure](#7.-folder-structure)
 8. [License](#8.-license)
 
-## 1. Overview
-A simulated data pipeline using AWS and Databricks. Made for [the AiCore Data Engineering Bootcamp](https://www.theaicore.com/launch/data-engineering).
+## Pinterest Data Emulation
+
+To demonstrate the processes of a data pipeline, it is necessary to generate dat
+
+the scripts found in the `user_emulation`-folder.
+
+- `pinterest_data`: contains data about posts being on Pinterest
+```
+{"index": 5730, "unique_id": "1e1f0c8b-9fcf-460b-9154-c775827206eb", "title": "Island Oasis Coupon Organizer", "description": "Description Coupon Organizer in a fun colorful fabric -island oasis, Great Size for the \"basic\" couponer - holds up to 500 coupons with ease, and is made long enough so that you\u2026\u00a0", "poster_name": "Consuelo Aguirre", "follower_count": "0", "tag_list": "Grocery Items,Grocery Coupons,Care Organization,Coupon Organization,Extreme Couponing,Couponing 101,Life Binder,Save My Money,Love Coupons", "is_image_or_video": "image", "image_src": "https://i.pinimg.com/originals/65/bb/ea/65bbeaf458907bb079317d8303c4fa0e.jpg", "downloaded": 1, "save_location": "Local save in /data/finance", "category": "finance"}
+```
+
+- `geolocation_data`: contains data about the geolocation of each Pinterest post found in pinterest_data
+```
+{"ind": 5730, "timestamp": "2021-04-19 17:37:03", "latitude": -77.015, "longitude": -101.437, "country": "Colombia"}
+```
+
+- `user_data`: contains data about the user that has uploaded each post found in pinterest_data
+```
+{"ind": 5730, "first_name": "Rachel", "last_name": "Davis", "age": 36, "date_joined": "2015-12-08 20:02:43"}
+```
 
 ## 3. Setup
 | text | text |
+
+
 
 ## 3. Services & Tools
 - [Apache Airflow](https://airflow.apache.org/):
@@ -69,6 +92,39 @@ Python Modules:
 
 ## 7. Folder Structure
 ```
+.
+├── COPYING.txt
+├── README.md
+├── airflow_dag
+│   └── 0affea73130b_dag.py
+├── credentials
+│   ├── 0affea73130b-key-pair.pem
+│   ├── aws_urls.yaml
+│   ├── db_creds.yaml
+│   └── filepaths.yaml
+├── databricks_notebooks
+│   ├── access.ipynb
+│   ├── batch
+│   │   ├── geolocation_batch_clean.ipynb
+│   │   ├── post_batch_clean.ipynb
+│   │   └── user_batch_clean.ipynb
+│   ├── data_analysis.ipynb
+│   ├── s3_mount.ipynb
+│   └── streaming
+│       ├── geolocation_stream_clean.ipynb
+│       ├── post_stream_clean.ipynb
+│       └── user_stream_clean.ipynb
+├── ignore
+│   ├── cred_test_script.py
+│   ├── kinesis-stream-test.py
+│   ├── patrick_aicore_test.py
+│   └── user_posting_stu_test.py
+└── user_emulation
+    ├── user_posting_emulation.py
+    └── user_posting_emulation_streaming.py
+```
+
+```
 ├── README.md / documentation
 ├── COPYING.txt / license
 ├── env
@@ -87,6 +143,7 @@ Python Modules:
 └── ignore
     └── misc.py / debugging
 ```
+
 ## 8. License
 Licensed under [GPL-3.0](https://github.com/tommifloor/pinterest-data-pipeline693/blob/main/COPYING.txt).
 

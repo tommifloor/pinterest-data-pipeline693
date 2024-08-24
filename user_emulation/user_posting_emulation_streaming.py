@@ -10,7 +10,7 @@ import yaml
 
 random.seed(100)
 
-creds_path = '/home/tommi/vscode-projects/pinterest-data-pipeline693/credentials/db_creds.yaml'
+creds_path = '../credentials/db_creds.yaml'
 
 pin_invoke_url = "https://aj3ii03bub.execute-api.us-east-1.amazonaws.com/test/streams/streaming-0affea73130b-pin/record"
 geo_invoke_url = "https://aj3ii03bub.execute-api.us-east-1.amazonaws.com/test/streams/streaming-0affea73130b-geo/record"
