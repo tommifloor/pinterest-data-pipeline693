@@ -4,9 +4,7 @@ from datetime import datetime, timedelta
 
 
 #Define params for Submit Run Operator
-notebook_task = {
-    'notebook_path': '/Users/cronies-02gorilla@icloud.com/pinterest_batch_v2'
-}
+notebook_task = {'notebook_path': '/Users/cronies-02gorilla@icloud.com/data_analysis'}
 
 
 #Define params for Run Now Operator
