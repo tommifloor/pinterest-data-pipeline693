@@ -4,16 +4,17 @@ The goal of this project is to demonstrate a practical understanding of data eng
 
 This document will attempt to breakdown and describe the infrastructure of the pipeline and the services used in its construction.
 
-## Table of Contents
-1. [Data Pipeline Architecture At A Glance](#1.-data-pipeline-architecture-at-a-glance)
-2. [Pinterest Data Emulation](#2.-pinterest-data-emulation)
-3. [Batch Workflow](#3.-the-batch-workflow)
-4. [Streaming Workflow](#3.-the-streaming-workflow)
-5. [Service Links](#5.-service-links)
-6. [Folder Structure](#6.-folder-structure)
-7. [License](#7.-license)
+# Table of Contents
+1. [Data Pipeline Architecture At A Glance](#data-pipeline-architecture-at-a-glance)
+2. [Pinterest Data Emulation](#pinterest-data-emulation)
+3. [Batch Workflow](#batch-workflow)
+4. [Streaming Workflow](#streaming-workflow)
+5. [Service Links](#service-links)
+6. [Key Project Takeaways](#key-project-takeaways)
+7. [Project Folder Structure](#project-folder-structure)
+8. [License](#license)
 
-# 1. Data Pipeline Architecture At A Glance
+# Data Pipeline Architecture At A Glance
 ![Architecture](assets/CloudPinterestPipeline.jpeg)
 
 The project consists of two main components:
@@ -23,7 +24,7 @@ The project consists of two main components:
 
 The two components may differ in their approach, but they are both built primarily on `AWS` and `Databricks` services and use the same data set as a foundation.
 
-# 2. Pinterest Data Emulation
+# Pinterest Data Emulation
 To demonstrate the practical applications of data engineering, it is necessary to first generate data resembling applicable, real world situations. For this project, the generated data has been designed to resemble that of social media website Pinterest.
 
 The data emulation is performed by the Python scripts found in the `user_emulation`-folder, which extract data from three data sets stored on an AWS relational database. To simulate user interactions, the data is extracted from the database at random.
@@ -45,7 +46,7 @@ The three data sets are:
 {"ind": 5730, "first_name": "Rachel", "last_name": "Davis", "age": 36, "date_joined": "2015-12-08 20:02:43"}
 ```
 
-# 3. Batch Workflow
+# Batch Workflow
 
 ### Overview: 
 > The `user_posting_emulation.py`-script sends the data through an API to an AWS EC2 client computer running Apache Kafka, where it is forwarded through an MSK cluster to storage in an AWS S3 bucket. The S3 bucket is mounted to Databricks, where the data is cleaned, integrated, and analyzed. The process is then automated to run on a daily basis as a batch process using Apache Airflow.
@@ -93,7 +94,7 @@ notebook_task = {'notebook_path': '/Users/(...)/data_analysis'}
 schedule_interval='@daily'
 ```
 
-# 4. Streaming Workflow
+# Streaming Workflow
 
 ### Overview:
 >The `user_posting_emulation_streaming.py` script uses a REST API to stream data to [AWS Kinesis](https://aws.amazon.com/kinesis/), an AWS service for collecting data in real or near-real time. The streaming data is accessed in Databricks, where it is cleaned before being stored in Delta Tables.
@@ -146,7 +147,7 @@ geo_stream_df = json_df.withColumn("ind", col("from_json(data)")["ind"])\
 ```
 Once the data is formatted correctly, it is run-through the data cleaning processes found in the batch workflow, in near real-time. The workflow scripts for each Kinesis data-stream can be found in the `/databricks_notebooks/streaming`-folder.
 
-# 5. Key Project Takeaways
+# Key Project Takeaways
 - AWS cloud computing and storage with AWS EC2 and S3
 - API configuration on AWS API Gateway
 - Apache Kafka event streaming and AWS MSK set up
@@ -155,7 +156,7 @@ Once the data is formatted correctly, it is run-through the data cleaning proces
 - Data cleaning and analysis using Apache Spark and PySpark
 - Databricks data streaming, transformation, and storage
 
-# 6. Project Folder Structure
+# Project Folder Structure
 ```
 .
 ├── COPYING.txt / license
@@ -195,7 +196,7 @@ Once the data is formatted correctly, it is run-through the data cleaning proces
     └── user_posting_emulation_streaming.py
 ```
 
-# 7. Service Links
+# Service Links
 
 - [Apache Airflow](https://airflow.apache.org/): *"Apache Airflow is a platform created (...) to programmatically author, schedule and monitor workflows."*
 - [Apache Kafka](https://kafka.apache.org/): *"Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications."*
@@ -211,7 +212,7 @@ Once the data is formatted correctly, it is run-through the data cleaning proces
 - [AWS MWAA](https://aws.amazon.com/managed-workflows-for-apache-airflow/): *"Amazon Managed Workflows for Apache Airflow (Amazon MWAA) orchestrates your workflows using Directed Acyclic Graphs (DAGs) written in Python."*
 - [AWS S3](https://aws.amazon.com/s3/): *"Amazon Simple Storage Service (Amazon S3) is an object storage service offering industry-leading scalability, data availability, security, and performance"*
 
-# 8. License
+# License
 Licensed under [GPL-3.0](https://github.com/tommifloor/pinterest-data-pipeline693/blob/main/COPYING.txt).
 
 ---
