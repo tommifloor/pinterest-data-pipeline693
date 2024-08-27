@@ -1,13 +1,6 @@
 # Pinterest Data Pipeline
 
-The goal of this project is to demonstrate a practical understanding of data engineering principles for the [AiCore Data Engineering Bootcamp](https://www.theaicore.com/launch/data-engineering), an introductory training course for data engineers. To do so, we will construct a data pipeline for processing data based on data resembling the social media website Pinterest.
-
-The project has two main components:
-
-- A `batch workflow` that processes Pinterest data in bulk on a daily schedule.
-- A `streaming workflow` that processes the same data in real-time, as the data is occuring. 
-
-The data infrastructure will be built primarily on the `AWS` and `Databricks` services. 
+The goal of this project is to demonstrate a practical understanding of data engineering principles for the [AiCore Data Engineering Bootcamp](https://www.theaicore.com/launch/data-engineering), an introductory training course for data engineers. To do so, we will construct a hypothetical data pipeline the social media website Pinterest.
 
 This document will attempt to breakdown and describe the infrastructure of the pipeline and the services used in its construction.
 
@@ -15,7 +8,6 @@ This document will attempt to breakdown and describe the infrastructure of the p
 1. [Data Pipeline Architecture At A Glance](#1.-data-pipeline-architecture-at-a-glance)
 2. [Pinterest Data Emulation](#2.-pinterest-data-emulation)
 3. [Batch Workflow](#3.-the-batch-workflow)
-    - [Kafka](kafka)
 4. [Streaming Workflow](#3.-the-streaming-workflow)
 5. [Service Links](#5.-service-links)
 6. [Folder Structure](#6.-folder-structure)
@@ -24,21 +16,19 @@ This document will attempt to breakdown and describe the infrastructure of the p
 # 1. Data Pipeline Architecture At A Glance
 ![Architecture](assets/CloudPinterestPipeline.jpeg)
 
-### Key Project Takeaways
-- AWS Cloud computing with EC2, S3 storage, and MSK
-- API configuration on AWS Gateway
-- Command line Kafka configuration
-- Kafka data streaming using AWS Kinesis
-- Airflow DAG workflow creation and MWAA deployment
-- Data cleaning and analysis using Apache Spark and PySpark
-- Databricks platform for data streaming, transformation, and storage
+The project consists of two main components:
+
+- A `batch workflow` that processes Pinterest data in bulk on a daily schedule.
+- A `streaming workflow` that processes a continous data stream from the same source in near real-time. 
+
+The two components may differ in their approach, but they are both built primarily on `AWS` and `Databricks` services and use the same data set as a foundation.
 
 # 2. Pinterest Data Emulation
-The foundation of data engineering is data. To demonstrate the practical applications of data engineering, it is necessary to first emulate data resembling real world situations. For this project, the generated data has been designed to resemble that of social media website Pinterest.
+The foundation of all data engineering is data. To demonstrate the practical applications of data engineering, it is necessary to first generate data resembling real world situations. For this project, the generated data has been designed to resemble that of social media website Pinterest.
 
-The data emulation is performed by the Python scripts found in the `user_emulation`-folder, which extract a continous stream of data from three datasets stored on an AWS relational database. To simulate user interactions as they would occur on Pinterest, data from the datasets is selected at random. The same datasets are used for both workflows.
+The data emulation is performed by the Python scripts found in the `user_emulation`-folder, which extract data from three data sets stored on an AWS relational database. To simulate user interactions, the data is extracted from the database at random.
 
-The datasets are:
+The three data sets are:
 
 - `pinterest_data`: contains data about posts on Pinterest:
 ```
@@ -58,19 +48,28 @@ The datasets are:
 # 3. Batch Workflow
 
 ### Overview: 
-> The `user_posting_emulation.py` script sends the data through an API to an AWS EC2 client computer running Kafka, where it is forwarded for storage in an AWS S3 bucket through MSK Connect. The S3 bucket is mounted to Databricks, where the data is merged, cleaned, and analyzed in batch. The process is then automated using Airflow to run on a daily basis.
+> The `user_posting_emulation.py` script sends the data through an API to an AWS EC2 client computer running Apache Kafka, where it is forwarded for storage in an AWS S3 bucket through MSK Connect. The S3 bucket is mounted to Databricks, where the data is cleaned, integrated, and analyzed. The process is then automated to run on a daily basis as a batch process using Apache Airflow.
 
-## Kafka
+## Kafka and AWS MSK
+[Apache Kafka](https://kafka.apache.org/) is installed on an [AWS EC2](https://aws.amazon.com/ec2/) instance and connected to an [AWS MSK](https://aws.amazon.com/msk/).
 
-Prior to configuring the API
+Authentication between the EC2 instance and MSK cluster is managed via [AWS IAM](https://aws.amazon.com/iam/) by configuring SASL authentication in the EC2 Kafka client's client.properties file.
 
-## AWS API Gateway Congiguration (Batch)
+Three Kafka topics are used to categorize the Pinterest data:
+> <your_UserId>.pin for Pinterest posts data  
+> <your_UserId>.geo for post geolocation data  
+> <your_UserId>.user for post user data  
 
-## Confluent.io Kafka Rest Proxy
+A REST API in the AWS API Gateway to send data to the MSK cluster. Once the API is deployed, it's invoke urls are integrated into `user_posting_emulation.py`-script to enable it to send data to the MSK cluster.
+
+## Data Storage in AWS S3
+
+The [Confluent.io Kafka Connector](https://docs.confluent.io/platform/current/kafka-rest/index.html) is used to connect the MSK cluster to [AWS S3](https://aws.amazon.com/s3/) storage. The connector directs data from the MSK cluster to specified S3 bucket.
+
+Running the `user_posting_emulation.py` will not send data from the AWS database to the MSK cluster, which will then be transferred to the S3 bucket for storage.
 
 ## Databricks: Batch Processing 
-
-The S3 bucket is mounted to [Databricks](https://www.databricks.com/), where it is cleaned for ease of reading and for further integration and analysis. 
+The S3 bucket is mounted to [Databricks](https://www.databricks.com/) using the `access.ipynb` and `s3_mount.ipynb` scripts. It is then cleaned for ease of reading and for further integration and analysis. 
 
 The data processing is performed using [PySpark](https://spark.apache.org/docs/latest/api/python/index.html), the Python API for use with [Apache Spark](https://spark.apache.org/), a data engineering and analytics engine that can be scaled to requirements.
 
@@ -78,7 +77,7 @@ The data cleaning and analyis processing can be viewed in full detail in the `da
 
 ## Airflow
 
-The above processes is automated to run daily using [AWS MWAA](https://aws.amazon.com/managed-workflows-for-apache-airflow/), Amazon's hosted Apache Airflow service. [Apache Airflow](https://airflow.apache.org/) is a platform for orchestrating workflows using `DAGs` (Directed Acyclic Graphs) - workflow pipelines constructed using Python. 
+The data processesing is automated to run daily using [AWS MWAA](https://aws.amazon.com/managed-workflows-for-apache-airflow/), AWS's hosted Apache Airflow service. [Apache Airflow](https://airflow.apache.org/) is a platform for orchestrating workflows using `DAGs` (Directed Acyclic Graphs) - workflow pipelines constructed using Python. 
 
 The project DAG, `0affea73130b_dag.py`, can be found in the `airflow_dag`-directory. 
 
@@ -87,8 +86,7 @@ The project DAG, `0affea73130b_dag.py`, can be found in the `airflow_dag`-direct
 **Line 7:**
 
 ```
-notebook_task = {'notebook_path': '/Users/cronies-02gorilla@icloud.com/data_analysis'}
-
+notebook_task = {'notebook_path': '/Users/(...)/data_analysis'}
 ```
 **Line 30:** 
 ```
@@ -97,15 +95,67 @@ schedule_interval='@daily'
 
 # 4. Streaming Workflow
 
-> `Streaming Workflow`: The `user_posting_emulation_streaming.py` script uses a REST API to stream data to AWS Kinesis. The streaming data is accessed in Databricks, where it is first merged and cleaned and then stored in Delta Tables.
+### Overview:
+>The `user_posting_emulation_streaming.py` script uses a REST API to stream data to AWS Kinesis, a AWS for collecting data in real or near-real time. The streaming data is accessed in Databricks, where it is cleaned before being stored in Delta Tables.
 
-## AWS Kinesis
+## AWS Kinesis Streams
+
+To stream data in real-time, it is necessary to set up three data-streams on AWS Kinesis:
+
+> streaming-<your_UserId>-pin for Pinterest posts data  
+> streaming-<your_UserId>-geo for post geolocation data   
+> streaming-<your_UserId>-user for post user data  
+
+This data-streams are configured in the Kinesis console.
 
 ## AWS API Gateway Configuration (Streaming)
 
+A REST API in the AWS API getaway allows for the reading, creation, updating, and deletion of data for the Kinesis data streams. Most critically, the APIs HTTPS `PUT` method  can update the data-stream resources.
+
+**`PUT`-method:**
+```
+{
+    "StreamName": "$input.params('stream-name')",
+    "Data": "$util.base64Encode($input.json('$.Data'))",
+    "PartitionKey": "$input.path('$.PartitionKey')"
+}
+```
+A modified version of the `user_posting_emulation.py` script named `user_posting_emulation_streaming.py` uses this `PUT` method to stream data to Kinesis.
+
 ## Databricks: Streaming Processing
 
-# 5. Project Folder Structure
+The Kinesis json data is streamed into Databricks using the PySpark readStream method:
+```
+stream_df = spark \
+.readStream \
+.format('kinesis') \
+.option('streamName','streaming-(...)-geo') \
+.option('initialPosition','latest') \
+.option('region','us-east-1') \
+.option('awsAccessKey', ACCESS_KEY) \
+.option('awsSecretKey', SECRET_KEY) \
+.load()
+```
+The dataframe's json data is then transformed into its own structured dataframe.
+```
+geo_stream_df = json_df.withColumn("ind", col("from_json(data)")["ind"])\
+.withColumn("country", col("from_json(data)")["country"])\
+.withColumn("latitude", col("from_json(data)")["latitude"])\
+.withColumn("longitude", col("from_json(data)")["longitude"])\
+.withColumn("timestamp", col("from_json(data)")["timestamp"])
+```
+Once the data is formatted correctly, it is run-through the same data cleaning processes as the batch process as it streams into Databricks. The workflow scripts for each Kinesis data-stream can be found in the `/databricks_notebooks/streaming`-folder.
+
+# 5. Key Project Takeaways
+- AWS Cloud computing with EC2, S3 storage, and MSK
+- API configuration on AWS Gateway
+- Command line Kafka configuration
+- Kafka data streaming using AWS Kinesis
+- Airflow DAG workflow creation and MWAA deployment
+- Data cleaning and analysis using Apache Spark and PySpark
+- Databricks platform for data streaming, transformation, and storage
+
+# 6. Project Folder Structure
 ```
 .
 ├── COPYING.txt / license
@@ -145,7 +195,7 @@ schedule_interval='@daily'
     └── user_posting_emulation_streaming.py
 ```
 
-# 6. Service Links
+# 7. Service Links
 
 - [Apache Airflow](https://airflow.apache.org/): *"Apache Airflow is a platform created (...) to programmatically author, schedule and monitor workflows."*
 - [Apache Kafka](https://kafka.apache.org/): *"Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications."*
@@ -161,7 +211,7 @@ schedule_interval='@daily'
 - [AWS MWAA](https://aws.amazon.com/managed-workflows-for-apache-airflow/): *"Amazon Managed Workflows for Apache Airflow (Amazon MWAA) orchestrates your workflows using Directed Acyclic Graphs (DAGs) written in Python."*
 - [AWS S3](https://aws.amazon.com/s3/): *"Amazon Simple Storage Service (Amazon S3) is an object storage service offering industry-leading scalability, data availability, security, and performance"*
 
-# 7. License
+# 8. License
 Licensed under [GPL-3.0](https://github.com/tommifloor/pinterest-data-pipeline693/blob/main/COPYING.txt).
 
 ---
