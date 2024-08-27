@@ -24,7 +24,7 @@ The project consists of two main components:
 The two components may differ in their approach, but they are both built primarily on `AWS` and `Databricks` services and use the same data set as a foundation.
 
 # 2. Pinterest Data Emulation
-The foundation of all data engineering is data. To demonstrate the practical applications of data engineering, it is necessary to first generate data resembling real world situations. For this project, the generated data has been designed to resemble that of social media website Pinterest.
+To demonstrate the practical applications of data engineering, it is necessary to first generate data resembling applicable, real world situations. For this project, the generated data has been designed to resemble that of social media website Pinterest.
 
 The data emulation is performed by the Python scripts found in the `user_emulation`-folder, which extract data from three data sets stored on an AWS relational database. To simulate user interactions, the data is extracted from the database at random.
 
@@ -48,30 +48,30 @@ The three data sets are:
 # 3. Batch Workflow
 
 ### Overview: 
-> The `user_posting_emulation.py` script sends the data through an API to an AWS EC2 client computer running Apache Kafka, where it is forwarded for storage in an AWS S3 bucket through MSK Connect. The S3 bucket is mounted to Databricks, where the data is cleaned, integrated, and analyzed. The process is then automated to run on a daily basis as a batch process using Apache Airflow.
+> The `user_posting_emulation.py`-script sends the data through an API to an AWS EC2 client computer running Apache Kafka, where it is forwarded through an MSK cluster to storage in an AWS S3 bucket. The S3 bucket is mounted to Databricks, where the data is cleaned, integrated, and analyzed. The process is then automated to run on a daily basis as a batch process using Apache Airflow.
 
 ## Kafka and AWS MSK
-[Apache Kafka](https://kafka.apache.org/) is installed on an [AWS EC2](https://aws.amazon.com/ec2/) instance and connected to an [AWS MSK](https://aws.amazon.com/msk/).
+[Apache Kafka](https://kafka.apache.org/) is installed on an [AWS EC2](https://aws.amazon.com/ec2/) instance and connected to an [AWS MSK](https://aws.amazon.com/msk/) Kafka cluster.
 
-Authentication between the EC2 instance and MSK cluster is managed via [AWS IAM](https://aws.amazon.com/iam/) by configuring SASL authentication in the EC2 Kafka client's client.properties file.
+Authentication between the EC2 instance and MSK cluster is managed via [AWS IAM](https://aws.amazon.com/iam/) by configuring SASL authentication in the EC2 Kafka client's `client.properties`-file.
 
 Three Kafka topics are used to categorize the Pinterest data:
 > <your_UserId>.pin for Pinterest posts data  
 > <your_UserId>.geo for post geolocation data  
 > <your_UserId>.user for post user data  
 
-A REST API in the AWS API Gateway to send data to the MSK cluster. Once the API is deployed, it's invoke urls are integrated into `user_posting_emulation.py`-script to enable it to send data to the MSK cluster.
+A REST API in the AWS API Gateway to send data to the MSK cluster. Once the API is deployed, it's invoke URLs are integrated into `user_posting_emulation.py`-script, enabling it to send data to the MSK cluster.
 
 ## Data Storage in AWS S3
 
-The [Confluent.io Kafka Connector](https://docs.confluent.io/platform/current/kafka-rest/index.html) is used to connect the MSK cluster to [AWS S3](https://aws.amazon.com/s3/) storage. The connector directs data from the MSK cluster to specified S3 bucket.
+The [Confluent.io Kafka Connector](https://docs.confluent.io/platform/current/kafka-rest/index.html) is used to connect the MSK cluster to [AWS S3](https://aws.amazon.com/s3/) storage. The connector directs data from the MSK cluster to a specified S3 bucket.
 
-Running the `user_posting_emulation.py` will not send data from the AWS database to the MSK cluster, which will then be transferred to the S3 bucket for storage.
+Running the `user_posting_emulation.py` sends data from the AWS database to the MSK cluster, which will then be transferred to the S3 bucket for storage.
 
 ## Databricks: Batch Processing 
 The S3 bucket is mounted to [Databricks](https://www.databricks.com/) using the `access.ipynb` and `s3_mount.ipynb` scripts. It is then cleaned for ease of reading and for further integration and analysis. 
 
-The data processing is performed using [PySpark](https://spark.apache.org/docs/latest/api/python/index.html), the Python API for use with [Apache Spark](https://spark.apache.org/), a data engineering and analytics engine that can be scaled to requirements.
+The data processing is performed using [PySpark](https://spark.apache.org/docs/latest/api/python/index.html), the Python API for use with [Apache Spark](https://spark.apache.org/), a data engineering and analytics engine that can be scaled to demand.
 
 The data cleaning and analyis processing can be viewed in full detail in the `databricks_notebooks/batch`-folder and `databricks_notebooks/data_analysis.ipynb`-script, respectively.
 
@@ -96,11 +96,11 @@ schedule_interval='@daily'
 # 4. Streaming Workflow
 
 ### Overview:
->The `user_posting_emulation_streaming.py` script uses a REST API to stream data to AWS Kinesis, a AWS for collecting data in real or near-real time. The streaming data is accessed in Databricks, where it is cleaned before being stored in Delta Tables.
+>The `user_posting_emulation_streaming.py` script uses a REST API to stream data to [AWS Kinesis](https://aws.amazon.com/kinesis/), an AWS service for collecting data in real or near-real time. The streaming data is accessed in Databricks, where it is cleaned before being stored in Delta Tables.
 
 ## AWS Kinesis Streams
 
-To stream data in real-time, it is necessary to set up three data-streams on AWS Kinesis:
+Three data-streams are set up on [AWS Kinesis](https://aws.amazon.com/kinesis/) for streaming:
 
 > streaming-<your_UserId>-pin for Pinterest posts data  
 > streaming-<your_UserId>-geo for post geolocation data   
@@ -108,9 +108,9 @@ To stream data in real-time, it is necessary to set up three data-streams on AWS
 
 This data-streams are configured in the Kinesis console.
 
-## AWS API Gateway Configuration (Streaming)
+## Kinesis API Integration
 
-A REST API in the AWS API getaway allows for the reading, creation, updating, and deletion of data for the Kinesis data streams. Most critically, the APIs HTTPS `PUT` method  can update the data-stream resources.
+A REST API in the AWS API Gateway allows for the reading, creation, updating, and deletion of data for the Kinesis data streams. Most critically, the APIs HTTPS `PUT` method  can update the data-stream resources.
 
 **`PUT`-method:**
 ```
@@ -124,7 +124,7 @@ A modified version of the `user_posting_emulation.py` script named `user_posting
 
 ## Databricks: Streaming Processing
 
-The Kinesis json data is streamed into Databricks using the PySpark readStream method:
+The Kinesis data is streamed into Databricks using the PySpark readStream method:
 ```
 stream_df = spark \
 .readStream \
@@ -136,7 +136,7 @@ stream_df = spark \
 .option('awsSecretKey', SECRET_KEY) \
 .load()
 ```
-The dataframe's json data is then transformed into its own structured dataframe.
+The Kinesis data's json format is transformed into a structured dataframe using PySpark:
 ```
 geo_stream_df = json_df.withColumn("ind", col("from_json(data)")["ind"])\
 .withColumn("country", col("from_json(data)")["country"])\
@@ -144,16 +144,16 @@ geo_stream_df = json_df.withColumn("ind", col("from_json(data)")["ind"])\
 .withColumn("longitude", col("from_json(data)")["longitude"])\
 .withColumn("timestamp", col("from_json(data)")["timestamp"])
 ```
-Once the data is formatted correctly, it is run-through the same data cleaning processes as the batch process as it streams into Databricks. The workflow scripts for each Kinesis data-stream can be found in the `/databricks_notebooks/streaming`-folder.
+Once the data is formatted correctly, it is run-through the data cleaning processes found in the batch workflow, in near real-time. The workflow scripts for each Kinesis data-stream can be found in the `/databricks_notebooks/streaming`-folder.
 
 # 5. Key Project Takeaways
-- AWS Cloud computing with EC2, S3 storage, and MSK
-- API configuration on AWS Gateway
-- Command line Kafka configuration
-- Kafka data streaming using AWS Kinesis
+- AWS cloud computing and storage with AWS EC2 and S3
+- API configuration on AWS API Gateway
+- Apache Kafka event streaming and AWS MSK set up
+- Kafka event streaming in AWS Kinesis
 - Airflow DAG workflow creation and MWAA deployment
 - Data cleaning and analysis using Apache Spark and PySpark
-- Databricks platform for data streaming, transformation, and storage
+- Databricks data streaming, transformation, and storage
 
 # 6. Project Folder Structure
 ```
@@ -161,10 +161,10 @@ Once the data is formatted correctly, it is run-through the same data cleaning p
 ├── COPYING.txt / license
 ├── README.md / documentation
 │
-├── env / conda env
+├── env / conda environment
 │   └── env.yaml
 |
-├── airflow_dag / batch scheduling
+├── airflow_dag / batch workflow automation
 │   └── 0affea73130b_dag.py 
 │
 ├── databricks_notebooks / data processing
